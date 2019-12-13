@@ -1,9 +1,9 @@
 <?php declare(strict_types = 1);
 
-namespace Confetti\Controllers;
+namespace ExpressPHP\Controllers;
 
-use Http\Request;
-use Http\Response;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class HomepageController
 {
@@ -16,9 +16,9 @@ class HomepageController
         $this->response = $response;
     }
 
-    public function show()
+    public function index()
     {
-        $content = $this->request;
-        $this->response->setContent(print_r($content));
+        $content = $this->request->getContent();
+        $this->response->setContent($content);
     }
 }

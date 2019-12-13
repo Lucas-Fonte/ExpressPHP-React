@@ -1,11 +1,5 @@
 <?php declare(strict_types = 1);
 
-namespace Confetti;
-
-use Http\HttpRequest;
-use Http\HttpResponse;
-use FastRoute;
-
 require __DIR__ . '/../vendor/autoload.php';
 
 error_reporting(E_ALL);
@@ -24,10 +18,10 @@ if ($environment !== 'production') {
 }
 $whoops->register();
 
-$injector = include('Dependencies.php');
+$injector = include('Dependencies_Injector.php');
 
-$request = $injector->make('Http\HttpRequest');
-$response = $injector->make('Http\HttpResponse');
+$request = $injector->make('Symfony\Component\HttpFoundation\Request');
+$response = $injector->make('Symfony\Component\HttpFoundation\Response');
 
 $routeDefinitionCallback = function (\FastRoute\RouteCollector $r) {
     $routes = include('routes.php');
@@ -38,7 +32,7 @@ $routeDefinitionCallback = function (\FastRoute\RouteCollector $r) {
 
 $dispatcher = \FastRoute\simpleDispatcher($routeDefinitionCallback);
 
-$routeInfo = $dispatcher->dispatch($request->getMethod(), $request->getPath());
+$routeInfo = $dispatcher->dispatch($request->getMethod(), $request->getPathInfo());
 switch ($routeInfo[0]) {
     case \FastRoute\Dispatcher::NOT_FOUND:
         $response->setContent('404 - Page not found');
@@ -57,10 +51,6 @@ switch ($routeInfo[0]) {
         $class->$method($vars);
         break;
     }
-
-foreach ($response->getHeaders() as $header) {
-    header($header, false);
-}
 
 echo $response->getContent();
 
