@@ -2,8 +2,9 @@
 
 namespace Confetti;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Http\HttpRequest;
+use Http\HttpResponse;
+use FastRoute;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -23,16 +24,10 @@ if ($environment !== 'production') {
 }
 $whoops->register();
 
-// HTTP-Requests
+$injector = include('Dependencies.php');
 
-$request = Request::createFromGlobals();
-$content = $request->getContent();
-
-$response = new Response();
-$response->setContent($content);
-$response->send();
-
-// Routing
+$request = $injector->make('Http\HttpRequest');
+$response = $injector->make('Http\HttpResponse');
 
 $routeDefinitionCallback = function (\FastRoute\RouteCollector $r) {
     $routes = include('routes.php');
@@ -54,8 +49,18 @@ switch ($routeInfo[0]) {
         $response->setStatusCode(405);
         break;
     case \FastRoute\Dispatcher::FOUND:
-        $handler = $routeInfo[1];
+        $className = $routeInfo[1][0];
+        $method = $routeInfo[1][1];
         $vars = $routeInfo[2];
-        call_user_func($handler, $vars);
+        
+        $class = $injector->make($className);
+        $class->$method($vars);
         break;
+    }
+
+foreach ($response->getHeaders() as $header) {
+    header($header, false);
 }
+
+echo $response->getContent();
+
